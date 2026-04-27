@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Harvey Specter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;700&family=Montserrat:wght@100;300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background-color: #0a0a0a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .line-top,
+    .line-bottom {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, #c9a84c, transparent);
+      opacity: 0;
+      animation: line-grow 1.4s ease forwards;
+    }
+
+    .line-top {
+      top: 0;
+      height: 28vh;
+      animation-delay: 0.2s;
+    }
+
+    .line-bottom {
+      bottom: 0;
+      height: 28vh;
+      animation-delay: 0.2s;
+    }
+
+    @keyframes line-grow {
+      from { opacity: 0; transform: translateX(-50%) scaleY(0); }
+      to   { opacity: 1; transform: translateX(-50%) scaleY(1); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 0 2rem;
+      opacity: 0;
+      animation: fade-up 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .eyebrow {
+      letter-spacing: 0.5em;
+      font-size: 0.6rem;
+      font-weight: 300;
+      color: #c9a84c;
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+
+    .name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(4rem, 12vw, 10rem);
+      font-weight: 300;
+      color: #f0ece2;
+      line-height: 0.9;
+      letter-spacing: -0.01em;
+    }
+
+    .name .first {
+      display: block;
+    }
+
+    .name .last {
+      display: block;
+      color: #c9a84c;
+    }
+
+    .rule {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      margin: 2.4rem auto 0;
+      max-width: 360px;
+      justify-content: center;
+    }
+
+    .rule::before,
+    .rule::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, #3a3228);
+    }
+
+    .rule::after {
+      background: linear-gradient(to left, transparent, #3a3228);
+    }
+
+    .tagline {
+      font-size: 0.62rem;
+      font-weight: 300;
+      letter-spacing: 0.45em;
+      text-transform: uppercase;
+      color: #5a5040;
+    }
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <div class="line-top"></div>
+  <div class="line-bottom"></div>
+
+  <div class="container">
+    <p class="eyebrow">Senior Partner &nbsp;·&nbsp; Pearson Hardman</p>
+    <h1 class="name">
+      <span class="first">Harvey</span>
+      <span class="last">Specter</span>
+    </h1>
+    <div class="rule">
+      <span class="tagline">The Best Closer in New York City</span>
+    </div>
+  </div>
+</body>
+</html>
