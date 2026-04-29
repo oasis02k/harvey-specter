@@ -14,7 +14,7 @@ import type {
   SanityNewsArticle,
 } from "../sanity/lib/types";
 
-export const revalidate = process.env.NODE_ENV === 'production' ? 60 : 0;
+export const revalidate = 60;
 
 const desktopHeroImage =
   "https://www.figma.com/api/mcp/asset/5882bf21-7468-42ac-b128-3c3044058f74";
