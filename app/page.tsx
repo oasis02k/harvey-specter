@@ -1,6 +1,20 @@
-"use client";
+import MobileNav from "./components/MobileNav";
+import { client } from "../sanity/lib/client";
+import { urlFor } from "../sanity/lib/image";
+import {
+  projectsQuery,
+  servicesQuery,
+  testimonialsQuery,
+  newsArticlesQuery,
+} from "../sanity/lib/queries";
+import type {
+  SanityProject,
+  SanityService,
+  SanityTestimonial,
+  SanityNewsArticle,
+} from "../sanity/lib/types";
 
-import { useState } from "react";
+export const revalidate = 60;
 
 const desktopHeroImage =
   "https://www.figma.com/api/mcp/asset/5882bf21-7468-42ac-b128-3c3044058f74";
@@ -13,24 +27,6 @@ const fullBleedImage =
 
 const newsArrowIcon = "https://www.figma.com/api/mcp/asset/d3772777-eb49-49fe-a154-037593d4cd73";
 
-const newsArticles = [
-  {
-    image: "https://www.figma.com/api/mcp/asset/d0086d95-519d-428a-b5fb-2ec5f5be537a",
-    desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    desktopOffset: false,
-  },
-  {
-    image: "https://www.figma.com/api/mcp/asset/8c042239-0491-43c6-9dae-22e995b65e83",
-    desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    desktopOffset: true,
-  },
-  {
-    image: "https://www.figma.com/api/mcp/asset/03f4f609-e860-4cdc-af14-8ce07e33f9cb",
-    desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    desktopOffset: false,
-  },
-];
-
 const testimonialLogoMarko = "https://www.figma.com/api/mcp/asset/5fc17bdd-8014-4979-b7c0-96bb711fa8fb";
 const testimonialLogoLukas = "https://www.figma.com/api/mcp/asset/cd8def0a-1998-4b43-a6e0-59e7f533f0f4";
 const testimonialLogoSarah = "https://www.figma.com/api/mcp/asset/e0218c7d-0273-4b3a-ac25-2bb23ffa8168";
@@ -38,7 +34,7 @@ const testimonialLogoSofia = "https://www.figma.com/api/mcp/asset/38205295-23e0-
 const testimonialLogoMarkoMobile = "https://www.figma.com/api/mcp/asset/22fb6961-c8f4-41a2-9530-3e01b512e502";
 const testimonialLogoSofiaMobile = "https://www.figma.com/api/mcp/asset/efcd0609-0ac9-4d85-911b-78ba27c16536";
 
-const projects = [
+const fallbackProjects = [
   {
     name: "Surfers Paradise",
     tags: ["Social Media", "Photography"],
@@ -65,7 +61,7 @@ const projects = [
   },
 ];
 
-const services = [
+const fallbackServices = [
   {
     index: "1",
     name: "Brand Discovery",
@@ -92,10 +88,122 @@ const services = [
   },
 ];
 
+const fallbackTestimonials = [
+  {
+    name: "Marko Stojković",
+    quote: "A brilliant creative partner who transformed our vision into a unique, high-impact brand identity. Their ability to craft everything from custom mascots to polished logos is truly impressive.",
+    logo: testimonialLogoMarko,
+    logoMobile: testimonialLogoMarkoMobile,
+    desktopLeft: 102, desktopTop: 142, desktopRotation: -6.85,
+    mobileRotation: -3.5,
+    logoWidth: 142.749, logoHeight: 18.97,
+  },
+  {
+    name: "Lukas Weber",
+    quote: "Professional, precise, and incredibly fast at handling complex product visualizations and templates.",
+    logo: testimonialLogoLukas,
+    logoMobile: testimonialLogoLukas,
+    desktopLeft: 676, desktopTop: 272, desktopRotation: 2.9,
+    mobileRotation: 2.9,
+    logoWidth: 137.733, logoHeight: 19.263,
+  },
+  {
+    name: "Sarah Jenkins",
+    quote: "A strategic partner who balances stunning aesthetics with high-performance UX for complex platforms. They don't just make things look good; they solve business problems through visual clarity.",
+    logo: testimonialLogoSarah,
+    logoMobile: testimonialLogoSarah,
+    desktopLeft: 305, desktopTop: 553, desktopRotation: 2.23,
+    mobileRotation: 2.23,
+    logoWidth: 108.537, logoHeight: 30.748,
+  },
+  {
+    name: "Sofia Martínez",
+    quote: "An incredibly versatile designer who delivers consistent quality across a wide range of styles and formats.",
+    logo: testimonialLogoSofia,
+    logoMobile: testimonialLogoSofiaMobile,
+    desktopLeft: 987, desktopTop: 546, desktopRotation: -4.15,
+    mobileRotation: 2,
+    logoWidth: 81.1, logoHeight: 36.174,
+  },
+];
+
+const fallbackNews = [
+  {
+    image: "https://www.figma.com/api/mcp/asset/d0086d95-519d-428a-b5fb-2ec5f5be537a",
+    desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    desktopOffset: false,
+  },
+  {
+    image: "https://www.figma.com/api/mcp/asset/8c042239-0491-43c6-9dae-22e995b65e83",
+    desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    desktopOffset: true,
+  },
+  {
+    image: "https://www.figma.com/api/mcp/asset/03f4f609-e860-4cdc-af14-8ce07e33f9cb",
+    desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    desktopOffset: false,
+  },
+];
+
 const navLinks = ["About", "Services", "Projects", "News", "Contact"];
 
-export default function Home() {
-  const [menuOpen, setMenuOpen] = useState(false);
+function getProjectHeight(isTall: boolean) {
+  return isTall ? "h-[744px]" : "h-[699px]";
+}
+
+export default async function Home() {
+  const hasSanity = !!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID &&
+    process.env.NEXT_PUBLIC_SANITY_PROJECT_ID !== 'your-project-id';
+
+  let rawProjects: SanityProject[] = [];
+  let rawServices: SanityService[] = [];
+  let rawTestimonials: SanityTestimonial[] = [];
+  let rawNews: SanityNewsArticle[] = [];
+
+  if (hasSanity) {
+    [rawProjects, rawServices, rawTestimonials, rawNews] = await Promise.all([
+      client.fetch<SanityProject[]>(projectsQuery),
+      client.fetch<SanityService[]>(servicesQuery),
+      client.fetch<SanityTestimonial[]>(testimonialsQuery),
+      client.fetch<SanityNewsArticle[]>(newsArticlesQuery),
+    ]);
+  }
+
+  const projects = rawProjects.length > 0
+    ? rawProjects.map((p) => ({
+        name: p.name,
+        tags: p.tags ?? [],
+        image: p.image ? urlFor(p.image).width(800).url() : '',
+        desktopHeight: getProjectHeight(p.isTall),
+      }))
+    : fallbackProjects;
+
+  const services = rawServices.length > 0
+    ? rawServices.map((s) => ({
+        index: s.index,
+        name: s.name,
+        desc: s.desc,
+        image: s.image ? urlFor(s.image).width(300).url() : '',
+      }))
+    : fallbackServices;
+
+  const testimonials = rawTestimonials.length > 0
+    ? rawTestimonials.map((t, i) => ({
+        ...fallbackTestimonials[i % fallbackTestimonials.length],
+        name: t.name,
+        quote: t.quote,
+        logo: t.logo ? urlFor(t.logo).width(300).url() : '',
+        logoMobile: t.logoMobile ? urlFor(t.logoMobile).width(300).url() : (t.logo ? urlFor(t.logo).width(300).url() : ''),
+      }))
+    : fallbackTestimonials;
+
+  const newsArticles = rawNews.length > 0
+    ? rawNews.map((n) => ({
+        image: n.image ? urlFor(n.image).width(800).url() : '',
+        desc: n.desc,
+        desktopOffset: n.desktopOffset ?? false,
+      }))
+    : fallbackNews;
 
   return (
     <main>
@@ -155,59 +263,9 @@ export default function Home() {
           Let&apos;s talk
         </button>
 
-        {/* Mobile hamburger */}
-        <button
-          onClick={() => setMenuOpen(true)}
-          className="md:hidden"
-          aria-label="Open menu"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect y="5" width="24" height="2" rx="1" fill="black" />
-            <rect y="11" width="24" height="2" rx="1" fill="black" />
-            <rect y="17" width="24" height="2" rx="1" fill="black" />
-          </svg>
-        </button>
+        {/* Mobile nav (hamburger + fullscreen overlay) */}
+        <MobileNav />
       </nav>
-
-      {/* Mobile fullscreen menu */}
-      {menuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-white flex flex-col px-4 pt-6">
-          <button
-            onClick={() => setMenuOpen(false)}
-            className="self-end mb-8"
-            aria-label="Close menu"
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="black"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <line x1="6" y1="6" x2="18" y2="18" />
-              <line x1="18" y1="6" x2="6" y2="18" />
-            </svg>
-          </button>
-          <ul className="flex flex-col gap-6 list-none m-0 p-0">
-            {navLinks.map((link) => (
-              <li key={link}>
-                <a
-                  href={`#${link.toLowerCase()}`}
-                  className="font-semibold text-2xl tracking-[-0.04em] capitalize text-black"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {link}
-                </a>
-              </li>
-            ))}
-          </ul>
-          <button className="mt-8 w-fit bg-black text-white font-medium text-sm tracking-[-0.04em] rounded-full px-4 py-3">
-            Let&apos;s talk
-          </button>
-        </div>
-      )}
 
       {/* ── Hero content ── */}
       <div className="relative w-full flex flex-col items-center md:items-stretch justify-between md:justify-center h-[341px] md:h-auto shrink-0">
@@ -386,7 +444,7 @@ export default function Home() {
 
         {/* [4] Deliverables header */}
         <div className="flex items-center justify-between text-white uppercase font-light tracking-[-2.56px] md:tracking-[-7.68px] text-[32px] md:text-[96px] leading-none whitespace-nowrap">
-          <span>[4]</span>
+          <span>[{services.length}]</span>
           <span>Deliverables</span>
         </div>
 
@@ -579,73 +637,23 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Marko — top-left, -6.85deg */}
-        <div className="absolute" style={{ left: "102px", top: "142px" }}>
-          <div style={{ transform: "rotate(-6.85deg)" }}>
-            <div className="bg-[#f1f1f1] border border-[#ddd] rounded-[4px] p-6 flex flex-col gap-4 w-[353px]">
-              <div className="relative shrink-0" style={{ width: "142.749px", height: "18.97px" }}>
-                <img alt="" className="absolute inset-0 w-full h-full object-contain object-left" src={testimonialLogoMarko} />
+        {testimonials.map((t) => (
+          <div key={t.name} className="absolute" style={{ left: `${t.desktopLeft}px`, top: `${t.desktopTop}px` }}>
+            <div style={{ transform: `rotate(${t.desktopRotation}deg)` }}>
+              <div className="bg-[#f1f1f1] border border-[#ddd] rounded-[4px] p-6 flex flex-col gap-4 w-[353px]">
+                <div className="relative shrink-0" style={{ width: `${t.logoWidth}px`, height: `${t.logoHeight}px` }}>
+                  <img alt="" className="absolute inset-0 w-full h-full object-contain object-left" src={t.logo} />
+                </div>
+                <p className="text-[#1f1f1f] text-[18px] leading-[1.3] tracking-[-0.72px]">
+                  {t.quote}
+                </p>
+                <p className="font-black text-black text-[16px] leading-[1.1] tracking-[-0.64px] uppercase">
+                  {t.name}
+                </p>
               </div>
-              <p className="text-[#1f1f1f] text-[18px] leading-[1.3] tracking-[-0.72px]">
-                A brilliant creative partner who transformed our vision into a unique, high-impact brand identity. Their ability to craft everything from custom mascots to polished logos is truly impressive.
-              </p>
-              <p className="font-black text-black text-[16px] leading-[1.1] tracking-[-0.64px] uppercase">
-                Marko Stojković
-              </p>
             </div>
           </div>
-        </div>
-
-        {/* Lukas — top-right, 2.9deg */}
-        <div className="absolute" style={{ left: "676px", top: "272px" }}>
-          <div style={{ transform: "rotate(2.9deg)" }}>
-            <div className="bg-[#f1f1f1] border border-[#ddd] rounded-[4px] p-6 flex flex-col gap-4 w-[353px]">
-              <div className="relative shrink-0" style={{ width: "137.733px", height: "19.263px" }}>
-                <img alt="" className="absolute inset-0 w-full h-full object-contain object-left" src={testimonialLogoLukas} />
-              </div>
-              <p className="text-[#1f1f1f] text-[18px] leading-[1.3] tracking-[-0.72px]">
-                Professional, precise, and incredibly fast at handling complex product visualizations and templates.
-              </p>
-              <p className="font-black text-black text-[16px] leading-[1.1] tracking-[-0.64px] uppercase">
-                Lukas Weber
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Sarah — bottom-center, 2.23deg */}
-        <div className="absolute" style={{ left: "305px", top: "553px" }}>
-          <div style={{ transform: "rotate(2.23deg)" }}>
-            <div className="bg-[#f1f1f1] border border-[#ddd] rounded-[4px] p-6 flex flex-col gap-4 w-[353px]">
-              <div className="relative shrink-0" style={{ width: "108.537px", height: "30.748px" }}>
-                <img alt="" className="absolute inset-0 w-full h-full object-contain object-left" src={testimonialLogoSarah} />
-              </div>
-              <p className="text-[#1f1f1f] text-[18px] leading-[1.3] tracking-[-0.72px]">
-                A strategic partner who balances stunning aesthetics with high-performance UX for complex platforms. They don&apos;t just make things look good; they solve business problems through visual clarity.
-              </p>
-              <p className="font-black text-black text-[16px] leading-[1.1] tracking-[-0.64px] uppercase">
-                Sarah Jenkins
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Sofia — bottom-right, -4.15deg */}
-        <div className="absolute" style={{ left: "987px", top: "546px" }}>
-          <div style={{ transform: "rotate(-4.15deg)" }}>
-            <div className="bg-[#f1f1f1] border border-[#ddd] rounded-[4px] p-6 flex flex-col gap-4 w-[353px]">
-              <div className="relative shrink-0" style={{ width: "81.1px", height: "36.174px" }}>
-                <img alt="" className="absolute inset-0 w-full h-full object-contain object-left" src={testimonialLogoSofia} />
-              </div>
-              <p className="text-[#1f1f1f] text-[18px] leading-[1.3] tracking-[-0.72px]">
-                An incredibly versatile designer who delivers consistent quality across a wide range of styles and formats.
-              </p>
-              <p className="font-black text-black text-[16px] leading-[1.1] tracking-[-0.64px] uppercase">
-                Sofia Martínez
-              </p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Mobile */}
@@ -654,62 +662,21 @@ export default function Home() {
           Testimonials
         </p>
         <div className="flex gap-4 overflow-x-auto py-4 -mx-4 px-4">
-          {/* Marko — -3.5deg */}
-          <div className="shrink-0" style={{ transform: "rotate(-3.5deg)" }}>
-            <div className="bg-[#f1f1f1] border border-[#ddd] rounded-[4px] p-6 flex flex-col gap-4 w-[260px]">
-              <div className="relative shrink-0" style={{ width: "142.749px", height: "18.97px" }}>
-                <img alt="" className="absolute inset-0 w-full h-full object-contain object-left" src={testimonialLogoMarkoMobile} />
+          {testimonials.map((t) => (
+            <div key={t.name} className="shrink-0" style={{ transform: `rotate(${t.mobileRotation}deg)` }}>
+              <div className="bg-[#f1f1f1] border border-[#ddd] rounded-[4px] p-6 flex flex-col gap-4 w-[260px]">
+                <div className="relative shrink-0" style={{ width: `${t.logoWidth}px`, height: `${t.logoHeight}px` }}>
+                  <img alt="" className="absolute inset-0 w-full h-full object-contain object-left" src={t.logoMobile} />
+                </div>
+                <p className="text-[#1f1f1f] text-[18px] leading-[1.3] tracking-[-0.72px]">
+                  {t.quote}
+                </p>
+                <p className="font-black text-black text-[16px] leading-[1.1] tracking-[-0.64px] uppercase">
+                  {t.name}
+                </p>
               </div>
-              <p className="text-[#1f1f1f] text-[18px] leading-[1.3] tracking-[-0.72px]">
-                A brilliant creative partner who transformed our vision into a unique, high-impact brand identity. Their ability to craft everything from custom mascots to polished logos is truly impressive.
-              </p>
-              <p className="font-black text-black text-[16px] leading-[1.1] tracking-[-0.64px] uppercase">
-                Marko Stojković
-              </p>
             </div>
-          </div>
-          {/* Lukas — 2.9deg */}
-          <div className="shrink-0" style={{ transform: "rotate(2.9deg)" }}>
-            <div className="bg-[#f1f1f1] border border-[#ddd] rounded-[4px] p-6 flex flex-col gap-4 w-[260px]">
-              <div className="relative shrink-0" style={{ width: "137.733px", height: "19.263px" }}>
-                <img alt="" className="absolute inset-0 w-full h-full object-contain object-left" src={testimonialLogoLukas} />
-              </div>
-              <p className="text-[#1f1f1f] text-[18px] leading-[1.3] tracking-[-0.72px]">
-                Professional, precise, and incredibly fast at handling complex product visualizations and templates.
-              </p>
-              <p className="font-black text-black text-[16px] leading-[1.1] tracking-[-0.64px] uppercase">
-                Lukas Weber
-              </p>
-            </div>
-          </div>
-          {/* Sarah — 2.23deg */}
-          <div className="shrink-0" style={{ transform: "rotate(2.23deg)" }}>
-            <div className="bg-[#f1f1f1] border border-[#ddd] rounded-[4px] p-6 flex flex-col gap-4 w-[260px]">
-              <div className="relative shrink-0" style={{ width: "108.537px", height: "30.748px" }}>
-                <img alt="" className="absolute inset-0 w-full h-full object-contain object-left" src={testimonialLogoSarah} />
-              </div>
-              <p className="text-[#1f1f1f] text-[18px] leading-[1.3] tracking-[-0.72px]">
-                A strategic partner who balances stunning aesthetics with high-performance UX for complex platforms. They don&apos;t just make things look good; they solve business problems through visual clarity.
-              </p>
-              <p className="font-black text-black text-[16px] leading-[1.1] tracking-[-0.64px] uppercase">
-                Sarah Jenkins
-              </p>
-            </div>
-          </div>
-          {/* Sofia — 2deg */}
-          <div className="shrink-0" style={{ transform: "rotate(2deg)" }}>
-            <div className="bg-[#f1f1f1] border border-[#ddd] rounded-[4px] p-6 flex flex-col gap-4 w-[260px]">
-              <div className="relative shrink-0" style={{ width: "81.1px", height: "36.174px", transform: "rotate(-4deg)" }}>
-                <img alt="" className="absolute inset-0 w-full h-full object-contain object-left" src={testimonialLogoSofiaMobile} />
-              </div>
-              <p className="text-[#1f1f1f] text-[18px] leading-[1.3] tracking-[-0.72px]">
-                An incredibly versatile designer who delivers consistent quality across a wide range of styles and formats.
-              </p>
-              <p className="font-black text-black text-[16px] leading-[1.1] tracking-[-0.64px] uppercase">
-                Sofia Martínez
-              </p>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
